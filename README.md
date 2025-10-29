@@ -9,8 +9,11 @@
 - 环信发送前回调处理
 - 签名验证确保安全性
 - 消息内容审核
+- **实时日志监控界面**
+- **WebSocket 实时推送**
+- **SQLite 数据库存储**
 - Docker 容器化部署
-- 完整的日志记录
+- 完整的日志记录和统计
 
 ## 环境要求
 
@@ -52,6 +55,27 @@ docker build -t easemob-callback .
 docker run -p 9999:3000 -d easemob-callback
 ```
 
+## 前端界面
+
+启动服务后，访问 `http://localhost:9999` 即可查看实时日志监控界面。
+
+### 界面功能
+
+- **实时监控**: WebSocket 实时推送新的回调请求
+- **日志查看**: 查看所有回调请求的详细信息
+- **统计分析**: 显示总请求数、成功率、错误率等统计信息
+- **搜索过滤**: 支持按 CallId、IP 地址搜索，按状态过滤
+- **详情查看**: 点击日志条目查看完整的请求和响应信息
+- **自动刷新**: 可开启自动刷新统计数据
+
+### 界面截图
+
+界面包含以下主要区域：
+- 顶部导航栏：显示连接状态和实时监控状态
+- 统计卡片：显示总请求数、成功请求、错误请求、平均响应时间
+- 控制面板：搜索、过滤、刷新功能
+- 日志列表：显示所有回调请求的详细信息
+
 ## API 接口
 
 ### POST /easemob/callback
@@ -83,6 +107,60 @@ docker run -p 9999:3000 -d easemob-callback
   "payload": {}
 }
 ```
+
+### GET /api/logs
+
+获取回调日志列表
+
+**查询参数：**
+- `limit`: 每页数量 (默认: 100)
+- `offset`: 偏移量 (默认: 0)
+
+**响应：**
+```json
+{
+  "logs": [
+    {
+      "id": 1,
+      "callId": "string",
+      "timestamp": "number",
+      "ip": "string",
+      "userAgent": "string",
+      "method": "string",
+      "path": "string",
+      "requestBody": "object",
+      "responseBody": "object",
+      "statusCode": "number",
+      "processingTime": "number",
+      "createdAt": "string"
+    }
+  ]
+}
+```
+
+### GET /api/logs/:id
+
+获取指定日志详情
+
+### GET /api/stats
+
+获取统计信息
+
+**响应：**
+```json
+{
+  "stats": {
+    "totalRequests": "number",
+    "successRequests": "number", 
+    "errorRequests": "number",
+    "avgProcessingTime": "number"
+  }
+}
+```
+
+### GET /health
+
+健康检查接口
 
 ## 配置说明
 

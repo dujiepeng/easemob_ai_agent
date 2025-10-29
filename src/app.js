@@ -3,10 +3,25 @@ const crypto = require('crypto');
 const helmet = require('helmet');
 const cors = require('cors');
 const winston = require('winston');
+const http = require('http');
+const socketIo = require('socket.io');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
+const LogStorage = require('./logStorage');
 require('dotenv').config();
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 const port = process.env.PORT || 3000;
+
+// 初始化日志存储
+const logStorage = new LogStorage();
 
 // 配置日志
 const logger = winston.createLogger({
@@ -27,15 +42,70 @@ const logger = winston.createLogger({
 });
 
 // 中间件配置
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false // 允许内联脚本用于前端
+}));
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*'
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// 静态文件服务
+app.use(express.static(path.join(__dirname, '../public')));
+
+// 速率限制
+const limiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15分钟
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100 // 限制每个IP 100次请求
+});
+app.use('/api/', limiter);
+
 // 请求日志中间件
 app.use((req, res, next) => {
+  const startTime = Date.now();
+  
+  // 保存原始响应方法
+  const originalSend = res.send;
+  
+  res.send = function(data) {
+    const processingTime = Date.now() - startTime;
+    
+    // 记录到数据库
+    if (req.path === '/easemob/callback') {
+      logStorage.logRequest({
+        callId: req.body.callId || 'unknown',
+        timestamp: req.body.timestamp || Date.now(),
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        method: req.method,
+        path: req.path,
+        requestBody: req.body,
+        responseBody: data,
+        statusCode: res.statusCode,
+        processingTime: processingTime
+      }).then(() => {
+        // 通过 WebSocket 推送实时日志
+        io.emit('newLog', {
+          callId: req.body.callId || 'unknown',
+          timestamp: new Date().toISOString(),
+          ip: req.ip,
+          method: req.method,
+          path: req.path,
+          statusCode: res.statusCode,
+          processingTime: processingTime,
+          requestBody: req.body,
+          responseBody: data
+        });
+      }).catch(err => {
+        logger.error('Failed to log request:', err);
+      });
+    }
+    
+    // 调用原始发送方法
+    originalSend.call(this, data);
+  };
+  
   logger.info(`${req.method} ${req.path}`, {
     ip: req.ip,
     userAgent: req.get('User-Agent'),
@@ -158,6 +228,42 @@ app.post('/easemob/callback', (req, res) => {
   }
 });
 
+// API 接口
+app.get('/api/logs', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+    const logs = await logStorage.getLogs(limit, offset);
+    res.json({ logs });
+  } catch (error) {
+    logger.error('Failed to get logs:', error);
+    res.status(500).json({ error: 'Failed to get logs' });
+  }
+});
+
+app.get('/api/logs/:id', async (req, res) => {
+  try {
+    const log = await logStorage.getLogById(req.params.id);
+    if (!log) {
+      return res.status(404).json({ error: 'Log not found' });
+    }
+    res.json({ log });
+  } catch (error) {
+    logger.error('Failed to get log:', error);
+    res.status(500).json({ error: 'Failed to get log' });
+  }
+});
+
+app.get('/api/stats', async (req, res) => {
+  try {
+    const stats = await logStorage.getStats();
+    res.json({ stats });
+  } catch (error) {
+    logger.error('Failed to get stats:', error);
+    res.status(500).json({ error: 'Failed to get stats' });
+  }
+});
+
 // 健康检查接口
 app.get('/health', (req, res) => {
   res.json({
@@ -190,10 +296,37 @@ app.use('*', (req, res) => {
   });
 });
 
+// WebSocket 连接处理
+io.on('connection', (socket) => {
+  logger.info('Client connected to WebSocket');
+  
+  socket.on('disconnect', () => {
+    logger.info('Client disconnected from WebSocket');
+  });
+});
+
 // 启动服务器
-app.listen(port, () => {
+server.listen(port, () => {
   logger.info(`Easemob callback server started on port ${port}`);
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Frontend available at: http://localhost:${port}`);
+});
+
+// 优雅关闭
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    logStorage.close();
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  server.close(() => {
+    logStorage.close();
+    process.exit(0);
+  });
 });
 
 module.exports = app;

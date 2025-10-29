@@ -12,9 +12,10 @@ RUN npm ci --only=production
 
 # 复制源代码
 COPY src/ ./src/
+COPY public/ ./public/
 
-# 创建日志目录
-RUN mkdir -p logs
+# 创建必要的目录
+RUN mkdir -p logs data
 
 # 创建非 root 用户
 RUN addgroup -g 1001 -S nodejs
