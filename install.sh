@@ -9,10 +9,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# GitHub 仓库地址
-GITHUB_REPO="git@github.com:dujiepeng/easemob_ai_agent.git"
-# 也可以使用 HTTPS 地址（如果SSH不可用）
-# GITHUB_REPO="https://github.com/dujiepeng/easemob_ai_agent.git"
+# GitHub 仓库地址（默认使用 HTTPS，无需 SSH 配置）
+GITHUB_REPO="https://github.com/dujiepeng/easemob_ai_agent.git"
+# 如果需要使用 SSH（需要配置 SSH 密钥）
+# GITHUB_REPO="git@github.com:dujiepeng/easemob_ai_agent.git"
 
 # 默认安装目录
 DEFAULT_INSTALL_DIR="$HOME/easemob_ai_agent"
@@ -181,10 +181,23 @@ setup_code() {
         log_info "克隆代码到 $INSTALL_DIR..."
         git clone "$GITHUB_REPO" "$INSTALL_DIR" || {
             log_error "克隆代码失败"
-            log_info "如果使用 SSH 失败，请尝试:"
-            log_info "  export GITHUB_REPO=https://github.com/dujiepeng/easemob_ai_agent.git"
-            log_info "  然后重新运行此脚本"
-            exit 1
+            
+            # 如果使用的是 SSH 地址，尝试使用 HTTPS
+            if [[ "$GITHUB_REPO" == git@github.com:* ]]; then
+                log_info "检测到使用 SSH 方式失败，自动尝试 HTTPS 方式..."
+                local https_repo=$(echo "$GITHUB_REPO" | sed 's|git@github.com:|https://github.com/|')
+                git clone "$https_repo" "$INSTALL_DIR" || {
+                    log_error "使用 HTTPS 方式也失败"
+                    log_info "请检查网络连接或手动克隆仓库:"
+                    log_info "  git clone https://github.com/dujiepeng/easemob_ai_agent.git $INSTALL_DIR"
+                    exit 1
+                }
+                log_success "使用 HTTPS 方式克隆成功"
+            else
+                log_info "请检查网络连接或手动克隆仓库:"
+                log_info "  git clone https://github.com/dujiepeng/easemob_ai_agent.git $INSTALL_DIR"
+                exit 1
+            fi
         }
     fi
     
