@@ -5,7 +5,6 @@ const cors = require('cors');
 const winston = require('winston');
 const http = require('http');
 const socketIo = require('socket.io');
-const rateLimit = require('express-rate-limit');
 const path = require('path');
 const LogStorage = require('./logStorage');
 require('dotenv').config();
@@ -53,13 +52,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // 静态文件服务
 app.use(express.static(path.join(__dirname, '../public')));
-
-// 速率限制
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15分钟
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100 // 限制每个IP 100次请求
-});
-app.use('/api/', limiter);
 
 // 请求日志中间件
 app.use((req, res, next) => {
