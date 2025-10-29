@@ -96,22 +96,21 @@ check_docker_dependencies() {
 check_nodejs_dependencies() {
     log_info "检查 Node.js 相关依赖..."
     
-    local missing_deps=()
-    
-    if ! check_command node; then
-        missing_deps+=("node")
-    fi
-    
-    if ! check_command npm; then
-        missing_deps+=("npm")
-    fi
-    
-    if [ ${#missing_deps[@]} -gt 0 ]; then
-        log_error "缺少以下依赖: ${missing_deps[*]}"
+    # 尝试检测 node 或 nodejs 命令
+    local NODE_CMD=""
+    if check_command node; then
+        NODE_CMD="node"
+    elif check_command nodejs; then
+        NODE_CMD="nodejs"
+        log_warning "检测到 nodejs 命令，建议创建 node 软链接: sudo ln -s /usr/bin/nodejs /usr/bin/node"
+    else
+        log_error "未找到 Node.js (未找到 node 或 nodejs 命令)"
         log_info "请先安装 Node.js 和 npm："
         if [[ "$OSTYPE" == "linux-gnu"* ]]; then
             log_info "  Ubuntu/Debian: sudo apt-get update && sudo apt-get install -y nodejs npm"
-            log_info "  或使用 NodeSource 安装最新版本: https://github.com/nodesource/distributions"
+            log_info "  或使用 NodeSource 安装最新版本:"
+            log_info "    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -"
+            log_info "    sudo apt-get install -y nodejs"
         elif [[ "$OSTYPE" == "darwin"* ]]; then
             log_info "  macOS: brew install node"
             log_info "  或从官网下载: https://nodejs.org/"
@@ -119,14 +118,41 @@ check_nodejs_dependencies() {
         exit 1
     fi
     
-    # 检查 Node.js 版本
-    local node_version=$(node -v | sed 's/v//' | cut -d. -f1)
-    if [ "$node_version" -lt 16 ]; then
-        log_error "Node.js 版本需要 >= 16.0.0，当前版本: $(node -v)"
+    # 检查 npm
+    if ! check_command npm; then
+        log_error "未找到 npm 命令"
+        log_info "npm 通常随 Node.js 一起安装，如果单独安装："
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            log_info "  sudo apt-get install -y npm"
+        elif [[ "$OSTYPE" == "darwin"* ]]; then
+            log_info "  brew install npm"
+        fi
         exit 1
     fi
     
-    log_success "Node.js 相关依赖已安装 (Node.js $(node -v), npm $(npm -v))"
+    # 检查 Node.js 版本
+    local node_version_str=$($NODE_CMD -v 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        log_error "无法获取 Node.js 版本信息"
+        exit 1
+    fi
+    
+    local node_version=$(echo "$node_version_str" | sed 's/v//' | cut -d. -f1)
+    if [ -z "$node_version" ] || ! [[ "$node_version" =~ ^[0-9]+$ ]]; then
+        log_warning "无法解析 Node.js 版本: $node_version_str"
+        log_info "继续安装，但请确保 Node.js 版本 >= 16.0.0"
+    elif [ "$node_version" -lt 16 ]; then
+        log_error "Node.js 版本需要 >= 16.0.0，当前版本: $node_version_str"
+        log_info "请升级 Node.js："
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            log_info "  使用 NodeSource: curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && sudo apt-get install -y nodejs"
+        elif [[ "$OSTYPE" == "darwin"* ]]; then
+            log_info "  brew upgrade node"
+        fi
+        exit 1
+    fi
+    
+    log_success "Node.js 相关依赖已安装 (Node.js $node_version_str, npm $(npm -v))"
 }
 
 # 检查 Docker 服务是否运行
