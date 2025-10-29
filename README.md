@@ -22,13 +22,39 @@
 
 ## 快速开始
 
-### 1. 安装依赖
+### 方式一：一键部署（推荐）
+
+使用一键部署脚本自动完成代码拉取和部署：
+
+```bash
+# 从 GitHub 直接执行（推荐）
+bash <(curl -sSL https://raw.githubusercontent.com/dujiepeng/easemob_ai_agent/master/install.sh)
+
+# 或者先下载脚本后执行
+curl -sSL https://raw.githubusercontent.com/dujiepeng/easemob_ai_agent/master/install.sh -o install.sh
+bash < install.sh
+
+# 指定安装目录（可选）
+bash < install.sh /path/to/install/dir
+```
+
+脚本会自动完成：
+- 检查系统依赖（Git, Docker, Docker Compose）
+- 从 GitHub 克隆或更新代码
+- 配置环境变量（会提示输入 EASEMOB_SECRET）
+- 构建 Docker 镜像并启动服务
+
+部署完成后，服务将在 `http://localhost:9999` 启动。
+
+### 方式二：手动部署
+
+#### 1. 安装依赖
 
 ```bash
 npm install
 ```
 
-### 2. 配置环境变量
+#### 2. 配置环境变量
 
 复制 `.env.example` 为 `.env` 并配置相关参数：
 
@@ -36,7 +62,7 @@ npm install
 cp .env.example .env
 ```
 
-### 3. 启动服务
+#### 3. 启动服务
 
 开发环境：
 ```bash
@@ -48,7 +74,7 @@ npm run dev
 npm start
 ```
 
-### 4. Docker 部署
+#### 4. Docker 部署
 
 ```bash
 docker build -t easemob-callback .
