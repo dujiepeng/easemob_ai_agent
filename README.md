@@ -39,12 +39,20 @@ bash < install.sh /path/to/install/dir
 ```
 
 脚本会自动完成：
-- 检查系统依赖（Git, Docker, Docker Compose）
+- 检查系统依赖（Git，以及根据选择的部署方式检查 Node.js 或 Docker）
 - 从 GitHub 克隆或更新代码
 - 配置环境变量（会提示输入 EASEMOB_SECRET）
-- 构建 Docker 镜像并启动服务
+- 根据选择的部署方式启动服务
 
-部署完成后，服务将在 `http://localhost:9999` 启动。
+**部署方式选择：**
+- **本地部署（默认）**：使用 Node.js 直接运行，无需 Docker
+  - 需要 Node.js >= 16.0.0 和 npm
+  - 服务将在后台运行，PID 保存在 `.pid` 文件中
+- **Docker 部署**：使用 Docker Compose 容器化部署
+  - 需要 Docker 和 Docker Compose
+  - 服务在容器中运行，端口映射为 9999:3000
+
+运行脚本时会提示选择部署方式（默认选择本地部署）。
 
 ### 方式二：手动部署
 
