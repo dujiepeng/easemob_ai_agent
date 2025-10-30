@@ -241,9 +241,9 @@ function createLogElement(log) {
 
 // 获取状态样式类
 function getStatusClass(statusCode) {
-    if (statusCode >= 200 && statusCode < 300) return 'success';
-    if (statusCode >= 400) return 'error';
-    return 'warning';
+    if (statusCode >= 200 && statusCode < 300) return 'bg-success';
+    if (statusCode >= 400) return 'bg-danger';
+    return 'bg-warning';
 }
 
 // 获取状态文本
