@@ -154,9 +154,8 @@ function displayLogs() {
                         <th style="width: 100px;">From</th>
                         <th style="width: 100px;">To</th>
                         <th style="width: 80px;">类型</th>
-                        <th style="width: 200px;">Payload</th>
-                        <th style="width: 200px;">Body</th>
-                        <th style="width: 150px;">Ext</th>
+                        <th style="width: 250px;">Body</th>
+                        <th style="width: 200px;">Ext</th>
                         <th style="width: 80px;">耗时</th>
                         <th style="width: 150px;">时间</th>
                     </tr>
@@ -169,6 +168,16 @@ function displayLogs() {
     `;
     
     container.innerHTML = tableHTML;
+    
+    // 添加点击事件监听器
+    container.querySelectorAll('.log-entry').forEach(row => {
+        row.addEventListener('click', function() {
+            const logId = this.getAttribute('data-log-id');
+            if (logId) {
+                showLogDetail(parseInt(logId));
+            }
+        });
+    });
 }
 
 // 获取过滤后的日志
@@ -205,10 +214,6 @@ function createLogElement(log) {
     const statusText = getStatusText(log.statusCode);
     const timestamp = new Date(log.createdAt).toLocaleString('zh-CN');
     
-    // 获取 payload（完整的 payload 对象）
-    const payload = log.requestBody?.payload || {};
-    const payloadStr = JSON.stringify(payload);
-    
     // 截断过长的内容以便显示
     const truncateText = (text, maxLength = 50) => {
         if (!text) return '-';
@@ -217,7 +222,7 @@ function createLogElement(log) {
     };
     
     return `
-        <tr class="log-entry ${statusClass}" onclick="showLogDetail(${log.id})" style="cursor: pointer;">
+        <tr class="log-entry ${statusClass}" data-log-id="${log.id}" style="cursor: pointer;">
             <td>
                 <span class="badge status-badge ${statusClass}">${statusText}</span>
             </td>
@@ -230,13 +235,10 @@ function createLogElement(log) {
                 <span class="badge bg-info">${log.chatType || '-'}</span>
             </td>
             <td>
-                <small title="${payloadStr}">${truncateText(payloadStr, 30)}</small>
+                <small title="${log.body || '-'}">${truncateText(log.body, 50)}</small>
             </td>
             <td>
-                <small title="${log.body || '-'}">${truncateText(log.body, 30)}</small>
-            </td>
-            <td>
-                <small title="${log.ext || '-'}">${truncateText(log.ext, 20)}</small>
+                <small title="${log.ext || '-'}">${truncateText(log.ext, 30)}</small>
             </td>
             <td><small>${log.processingTime}ms</small></td>
             <td><small class="text-muted">${timestamp}</small></td>

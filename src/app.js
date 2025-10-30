@@ -75,20 +75,32 @@ app.use((req, res, next) => {
       const chatType = payload.chatType || null;
       const msg_id = payload.msgId || null;
       
-      // 提取 body (消息内容)
+      // 提取 body (消息内容) - 从 payload.bodies[0].msg 提取
       let body = null;
-      if (msgPayload.msg) {
-        // 文本消息
+      if (msgPayload.bodies && Array.isArray(msgPayload.bodies) && msgPayload.bodies.length > 0) {
+        const firstBody = msgPayload.bodies[0];
+        if (firstBody.msg) {
+          // 文本消息
+          body = firstBody.msg;
+        } else if (firstBody.url) {
+          // 图片/视频等媒体消息
+          body = firstBody.url;
+        } else if (firstBody) {
+          // 其他类型消息，转换为 JSON 字符串
+          body = typeof firstBody === 'string' ? firstBody : JSON.stringify(firstBody);
+        }
+      } else if (msgPayload.msg) {
+        // 兼容旧格式
         body = msgPayload.msg;
       } else if (msgPayload.url) {
-        // 图片/视频等媒体消息
+        // 兼容旧格式
         body = msgPayload.url;
       } else if (msgPayload) {
         // 其他类型消息，转换为 JSON 字符串
         body = typeof msgPayload === 'string' ? msgPayload : JSON.stringify(msgPayload);
       }
       
-      // 提取 ext (扩展字段)
+      // 提取 ext (扩展字段) - 从 payload.ext 提取
       const ext = payload.ext ? (typeof payload.ext === 'string' ? payload.ext : JSON.stringify(payload.ext)) : null;
       
       logStorage.logRequest({
