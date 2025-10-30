@@ -8,10 +8,12 @@ let autoRefreshEnabled = false;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
+    uwEventListeners();
     initializeSocket();
     loadStats();
     loadLogs();
-    setupEventListeners();
+    // 初始化日志点击事件委托（只需绑定一次）
+    bindLogClickEvents();
 });
 
 // 初始化 WebSocket 连接
@@ -169,7 +171,7 @@ function displayLogs() {
     
     container.innerHTML = tableHTML;
     
-    // 绑定点击事件
+    // 确保点击事件已绑定（使用事件委托，如果已绑定则无需重复绑定）
     bindLogClickEvents();
 }
 
@@ -271,7 +273,7 @@ function addNewLogToUI(logData) {
     // 重新显示日志
     displayLogs();
     
-    // 重新绑定点击事件（重要！）
+    // 确保点击事件已绑定（使用事件委托，只需绑定一次）
     bindLogClickEvents();
     
     // 显示实时指示器
@@ -318,23 +320,35 @@ async function showLogDetail(logId) {
     }
 }
 
-// 绑定日志行点击事件
+// 绑定日志行点击事件（使用事件委托，自动处理动态添加的元素）
+// 只需初始化一次，之后自动处理所有动态添加的日志行
 function bindLogClickEvents() {
     const container = document.getElementById('logsContainer');
-    container.querySelectorAll('.log-entry').forEach(row => {
-        // 移除已存在的事件监听器（避免重复绑定）
-        row.removeEventListener('click', handleLogClick);
-        // 添加新的点击事件监听器
-        row.addEventListener('click', handleLogClick);
-    });
-}
-
-// 处理日志行点击事件
-function handleLogClick(event) {
-    const logId = this.getAttribute('data-log-id');
-    if (logId) {
-        showLogDetail(parseInt(logId));
+    if (!container) return;
+    
+    // 如果已经绑定过，就不再重复绑定
+    if (container._logClickHandlerBound) {
+        return;
     }
+    
+    // 创建委托监听器
+    container._logClickHandler = function(event) {
+        // 检查点击的是否是日志行或其子元素
+        const logEntry = event.target.closest('.log-entry');
+        if (logEntry) {
+            const logId = logEntry.getAttribute('data-log-id');
+            if (logId) {
+                event.stopPropagation();
+                event.preventDefault();
+                showLogDetail(parseInt(logId));
+            }
+        }
+    };
+    
+    // 绑定到容器上（事件委托）
+    container.addEventListener('click', container._logClickHandler);
+    container._logClickHandlerBound = true;
+    console.log('日志点击事件已绑定（事件委托模式）');
 }
 
 // 刷新日志
