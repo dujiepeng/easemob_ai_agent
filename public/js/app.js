@@ -8,7 +8,7 @@ let autoRefreshEnabled = false;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
-    uwEventListeners();
+    setupEventListeners();
     initializeSocket();
     loadStats();
     loadLogs();
