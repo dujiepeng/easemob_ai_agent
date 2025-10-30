@@ -225,7 +225,7 @@ function createLogElement(log) {
             <td><small>${log.from_user || '-'}</small></td>
             <td><small>${log.to_user || '-'}</small></td>
             <td>
-                <span class="badge bg-info">${log.chatType || '-'}</span>
+                <span class="badge status-badge bg-info">${log.chatType || '-'}</span>
             </td>
             <td>
                 <small title="${log.body || '-'}">${truncateText(log.body, 50)}</small>
