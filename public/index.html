@@ -143,7 +143,7 @@
                                     <span class="input-group-text">
                                         <i class="bi bi-search"></i>
                                     </span>
-                                    <input type="text" class="form-control" id="searchInput" placeholder="搜索 CallId 或 IP...">
+                                    <input type="text" class="form-control" id="searchInput" placeholder="搜索 CallId、IP、消息ID、From、To、Body...">
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -192,9 +192,33 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>消息ID:</strong> <span id="detailMsgId">-</span>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>From:</strong> <span id="detailFrom">-</span>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>To:</strong> <span id="detailTo">-</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Chat Type:</strong> <span id="detailChatType">-</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Body:</strong> <span id="detailBody">-</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong>Ext:</strong> <pre class="json-viewer" id="detailExt">-</pre>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <h6>请求信息</h6>
+                            <h6>请求信息（完整）</h6>
                             <div class="json-viewer" id="requestDetails"></div>
                         </div>
                         <div class="col-md-6">

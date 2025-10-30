@@ -143,7 +143,32 @@ function displayLogs() {
         return;
     }
     
-    container.innerHTML = filteredLogs.map(log => createLogElement(log)).join('');
+    // 创建表格
+    const tableHTML = `
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 80px;">状态</th>
+                        <th style="width: 120px;">消息ID</th>
+                        <th style="width: 100px;">From</th>
+                        <th style="width: 100px;">To</th>
+                        <th style="width: 80px;">类型</th>
+                        <th style="width: 200px;">Payload</th>
+                        <th style="width: 200px;">Body</th>
+                        <th style="width: 150px;">Ext</th>
+                        <th style="width: 80px;">耗时</th>
+                        <th style="width: 150px;">时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${filteredLogs.map(log => createLogElement(log)).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = tableHTML;
 }
 
 // 获取过滤后的日志
@@ -152,10 +177,15 @@ function getFilteredLogs() {
     const statusFilter = document.getElementById('statusFilter').value;
     
     return logs.filter(log => {
-        // 搜索过滤
+        // 搜索过滤（支持搜索多个字段）
         const matchesSearch = !searchTerm || 
-            log.callId.toLowerCase().includes(searchTerm) ||
-            log.ip.toLowerCase().includes(searchTerm);
+            (log.callId && log.callId.toLowerCase().includes(searchTerm)) ||
+            (log.ip && log.ip.toLowerCase().includes(searchTerm)) ||
+            (log.msg_id && log.msg_id.toLowerCase().includes(searchTerm)) ||
+            (log.from_user && log.from_user.toLowerCase().includes(searchTerm)) ||
+            (log.to_user && log.to_user.toLowerCase().includes(searchTerm)) ||
+            (log.body && log.body.toLowerCase().includes(searchTerm)) ||
+            (log.chatType && log.chatType.toLowerCase().includes(searchTerm));
         
         // 状态过滤
         let matchesStatus = true;
@@ -169,35 +199,48 @@ function getFilteredLogs() {
     });
 }
 
-// 创建日志元素
+// 创建日志元素（表格行）
 function createLogElement(log) {
     const statusClass = getStatusClass(log.statusCode);
     const statusText = getStatusText(log.statusCode);
     const timestamp = new Date(log.createdAt).toLocaleString('zh-CN');
     
+    // 获取 payload（完整的 payload 对象）
+    const payload = log.requestBody?.payload || {};
+    const payloadStr = JSON.stringify(payload);
+    
+    // 截断过长的内容以便显示
+    const truncateText = (text, maxLength = 50) => {
+        if (!text) return '-';
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
+    };
+    
     return `
-        <div class="log-entry ${statusClass} p-3 mb-2 rounded" onclick="showLogDetail(${log.id})">
-            <div class="row align-items-center">
-                <div class="col-md-2">
-                    <span class="badge status-badge ${statusClass}">${statusText}</span>
-                </div>
-                <div class="col-md-2">
-                    <strong>${log.callId}</strong>
-                </div>
-                <div class="col-md-2">
-                    <small class="text-muted">${log.ip}</small>
-                </div>
-                <div class="col-md-2">
-                    <span class="badge bg-secondary">${log.method}</span>
-                </div>
-                <div class="col-md-2">
-                    <small>${log.processingTime}ms</small>
-                </div>
-                <div class="col-md-2">
-                    <small class="text-muted">${timestamp}</small>
-                </div>
-            </div>
-        </div>
+        <tr class="log-entry ${statusClass}" onclick="showLogDetail(${log.id})" style="cursor: pointer;">
+            <td>
+                <span class="badge status-badge ${statusClass}">${statusText}</span>
+            </td>
+            <td>
+                <small title="${log.msg_id || '-'}">${truncateText(log.msg_id, 20)}</small>
+            </td>
+            <td><small>${log.from_user || '-'}</small></td>
+            <td><small>${log.to_user || '-'}</small></td>
+            <td>
+                <span class="badge bg-info">${log.chatType || '-'}</span>
+            </td>
+            <td>
+                <small title="${payloadStr}">${truncateText(payloadStr, 30)}</small>
+            </td>
+            <td>
+                <small title="${log.body || '-'}">${truncateText(log.body, 30)}</small>
+            </td>
+            <td>
+                <small title="${log.ext || '-'}">${truncateText(log.ext, 20)}</small>
+            </td>
+            <td><small>${log.processingTime}ms</small></td>
+            <td><small class="text-muted">${timestamp}</small></td>
+        </tr>
     `;
 }
 
@@ -254,6 +297,15 @@ async function showLogDetail(logId) {
         const data = await response.json();
         
         if (data.log) {
+            // 显示提取的字段
+            document.getElementById('detailMsgId').textContent = data.log.msg_id || '-';
+            document.getElementById('detailFrom').textContent = data.log.from_user || '-';
+            document.getElementById('detailTo').textContent = data.log.to_user || '-';
+            document.getElementById('detailChatType').textContent = data.log.chatType || '-';
+            document.getElementById('detailBody').textContent = data.log.body || '-';
+            document.getElementById('detailExt').textContent = data.log.ext || '-';
+            
+            // 显示完整请求和响应
             document.getElementById('requestDetails').textContent = 
                 JSON.stringify(data.log.requestBody, null, 2);
             document.getElementById('responseDetails').textContent = 

@@ -69,10 +69,11 @@ app.use((req, res, next) => {
       const payload = req.body.payload || {};
       const msgPayload = payload.payload || {};
       
-      // 提取 from, to, chatType
+      // 提取 from, to, chatType, msgId
       const from_user = payload.from || null;
       const to_user = payload.to || null;
       const chatType = payload.chatType || null;
+      const msg_id = payload.msgId || null;
       
       // 提取 body (消息内容)
       let body = null;
@@ -104,6 +105,7 @@ app.use((req, res, next) => {
         from_user: from_user,
         to_user: to_user,
         chatType: chatType,
+        msg_id: msg_id,
         body: body,
         ext: ext
       }).then(() => {
@@ -121,6 +123,7 @@ app.use((req, res, next) => {
           from_user: from_user,
           to_user: to_user,
           chatType: chatType,
+          msg_id: msg_id,
           body: body,
           ext: ext
         });

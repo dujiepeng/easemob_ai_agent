@@ -37,6 +37,7 @@ class LogStorage {
         from_user TEXT,
         to_user TEXT,
         chatType TEXT,
+        msg_id TEXT,
         body TEXT,
         ext TEXT,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -60,6 +61,7 @@ class LogStorage {
       { name: 'from_user', type: 'TEXT' },
       { name: 'to_user', type: 'TEXT' },
       { name: 'chatType', type: 'TEXT' },
+      { name: 'msg_id', type: 'TEXT' },
       { name: 'body', type: 'TEXT' },
       { name: 'ext', type: 'TEXT' }
     ];
@@ -104,14 +106,15 @@ class LogStorage {
         from_user,
         to_user,
         chatType,
+        msg_id,
         body,
         ext
       } = logData;
 
       const sql = `
         INSERT INTO callback_logs 
-        (callId, timestamp, ip, userAgent, method, path, requestBody, responseBody, statusCode, processingTime, from_user, to_user, chatType, body, ext)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (callId, timestamp, ip, userAgent, method, path, requestBody, responseBody, statusCode, processingTime, from_user, to_user, chatType, msg_id, body, ext)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       this.db.run(sql, [
@@ -128,6 +131,7 @@ class LogStorage {
         from_user || null,
         to_user || null,
         chatType || null,
+        msg_id || null,
         body || null,
         ext || null
       ], function(err) {
