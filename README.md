@@ -28,10 +28,10 @@
 
 ```bash
 # 从 GitHub 直接执行（推荐）
-bash <(curl -sSL https://raw.githubusercontent.com/dujiepeng/easemob_ai_agent/master/install.sh)
+bash <(curl -sSL https://raw.githubusercontent.com/dujiepeng/easemob_ai_agent/main/install.sh)
 
 # 或者先下载脚本后执行
-curl -sSL https://raw.githubusercontent.com/dujiepeng/easemob_ai_agent/master/install.sh -o install.sh
+curl -sSL https://raw.githubusercontent.com/dujiepeng/easemob_ai_agent/main/install.sh -o install.sh
 bash < install.sh
 
 # 指定安装目录（可选）
@@ -201,6 +201,38 @@ docker run -p 9999:3000 -d easemob-callback
 在环信控制台中配置回调 URL：
 - URL: `http://your-domain:9999/easemob/callback`
 - Secret: 在 `.env` 文件中配置的 `EASEMOB_SECRET`
+
+## CI/CD 自动部署
+
+本项目配置了 GitHub Actions 自动部署功能，当代码推送到 `dev` 分支时会自动部署到服务器。
+
+### 配置说明
+
+1. **设置 GitHub Secrets**
+   - `SSH_HOST`: 服务器地址
+   - `SSH_USER`: SSH 用户名
+   - `SSH_PASSWORD`: SSH 密码（或使用 SSH 密钥）
+   - `SSH_PORT`: SSH 端口（可选，默认 22）
+   - `SSH_PROJECT_DIR`: 部署目录（可选，默认 `$HOME/easemob_ai_agent`）
+   - `SSH_DEPLOY_TYPE`: 部署方式，`local` 或 `docker`（可选，默认 `local`）
+
+2. **详细配置说明**
+   
+   查看 [部署配置指南](.github/DEPLOYMENT_GUIDE.md) 了解详细的配置步骤。
+
+3. **使用方法**
+   
+   推送代码到 `dev` 分支即可自动触发部署：
+   ```bash
+   git checkout dev
+   git add .
+   git commit -m "Update code"
+   git push origin dev
+   ```
+
+4. **查看部署状态**
+   
+   进入 GitHub 仓库的 `Actions` 标签查看部署状态和日志。
 
 ## 测试
 
