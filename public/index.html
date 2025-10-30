@@ -16,7 +16,7 @@
             background-color: #f8f9fa;
         }
         .log-entry.success {
-            border-left-color: #f9f9f9;
+            border-left-color: #28a745;
             background-color: white;
         }
         .log-entry.error {
@@ -27,12 +27,28 @@
             border-left-color: #ffc107;
             background-color: white;
         }
+        /* 确保表格行背景为白色 */
+        table.table tbody tr.log-entry {
+            background-color: white !important;
+        }
+        table.table tbody tr.log-entry:hover {
+            background-color: #f8f9fa !important;
+        }
+        table.table tbody tr.log-entry.success {
+            background-color: white !important;
+        }
+        table.table tbody tr.log-entry.error {
+            background-color: white !important;
+        }
+        table.table tbody tr.log-entry.warning {
+            background-color: white !important;
+        }
         .status-badge {
             font-size: 0.75rem;
             padding: 0.25rem 0.5rem;
         }
         .status-badge.bg-success {
-            background-color: #ffffff !important;
+            background-color: #28a745 !important;
             color: white !important;
             border: 1px solid #1e7e34;
         }
