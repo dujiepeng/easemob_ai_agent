@@ -65,30 +65,29 @@ app.use((req, res, next) => {
     
     // 记录到数据库
     if (req.path === '/easemob/callback') {
-      // 提取消息相关信息
+      // 提取消息相关信息 - 直接从 req.body 提取
       const payload = req.body.payload || {};
-      const msgPayload = payload.payload || {};
       
-      // 提取 from, to, chatType, msgId
-      const from_user = payload.from || null;
-      const to_user = payload.to || null;
-      const chatType = payload.chatType || null;
-      const msg_id = payload.msgId || null;
+      // 提取 from, to, chatType, msgId - 从 req.body 直接提取
+      const from_user = req.body.from || null;
+      const to_user = req.body.to || null;
+      const chatType = req.body.chat_type || null;  // 注意是 chat_type 不是 chatType
+      const msg_id = req.body.msg_id || null;
       
       // 提取 body (消息内容) - 从 payload.bodies 提取整个数组
       let body = null;
-      if (msgPayload.bodies && Array.isArray(msgPayload.bodies)) {
+      if (payload.bodies && Array.isArray(payload.bodies)) {
         // 提取整个 bodies 数组
-        body = JSON.stringify(msgPayload.bodies);
-      } else if (msgPayload.msg) {
+        body = JSON.stringify(payload.bodies);
+      } else if (payload.msg) {
         // 兼容旧格式
-        body = msgPayload.msg;
-      } else if (msgPayload.url) {
+        body = payload.msg;
+      } else if (payload.url) {
         // 兼容旧格式
-        body = msgPayload.url;
-      } else if (msgPayload) {
+        body = payload.url;
+      } else if (payload) {
         // 其他类型消息，转换为 JSON 字符串
-        body = typeof msgPayload === 'string' ? msgPayload : JSON.stringify(msgPayload);
+        body = typeof payload === 'string' ? payload : JSON.stringify(payload);
       }
       
       // 提取 ext (扩展字段) - 从 payload.ext 提取
