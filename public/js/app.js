@@ -271,6 +271,9 @@ function addNewLogToUI(logData) {
     // 重新显示日志
     displayLogs();
     
+    // 重新绑定点击事件（重要！）
+    bindLogClickEvents();
+    
     // 显示实时指示器
     showRealTimeIndicator();
 }
