@@ -38,7 +38,7 @@
 
 #### 5. SSH_PROJECT_DIR (可选)
 - **名称**: `SSH_PROJECT_DIR`
-- **描述**: 服务器上项目部署目录的绝对路径（默认: `$HOME/easemob_ai_agent`）
+- **描述**: 服务器上项目部署目录的绝对路径（默认: `$HOME/easemob_ai_agent`，与 `install.sh` 中的 `DEFAULT_INSTALL_DIR` 保持一致）
 - **示例**: `/var/www/easemob_ai_agent` 或 `/home/ubuntu/easemob_ai_agent`
 
 #### 6. SSH_DEPLOY_TYPE (可选)

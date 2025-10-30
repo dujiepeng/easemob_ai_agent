@@ -39,7 +39,8 @@ jobs:
           echo -e "${BLUE}========================================${NC}"
           echo ""
           
-          # 服务器上的项目目录（可通过 secret 配置，默认为 ~/easemob_ai_agent）
+          # 服务器上的项目目录（可通过 secret 配置）
+          # 默认值 $HOME/easemob_ai_agent 与 install.sh 中的 DEFAULT_INSTALL_DIR 保持一致
           PROJECT_DIR="${SSH_PROJECT_DIR:-$HOME/easemob_ai_agent}"
           DEPLOY_TYPE="${SSH_DEPLOY_TYPE:-local}"
           
