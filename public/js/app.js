@@ -172,7 +172,10 @@ function displayLogs() {
     container.innerHTML = tableHTML;
     
     // 确保点击事件已绑定（使用事件委托，如果已绑定则无需重复绑定）
-    bindLogClickEvents();
+    // 延迟一下确保DOM已更新
+    setTimeout(() => {
+        bindLogClickEvents();
+    }, 0);
 }
 
 // 获取过滤后的日志
@@ -322,13 +325,22 @@ async function showLogDetail(logId) {
 
 // 绑定日志行点击事件（使用事件委托，自动处理动态添加的元素）
 // 只需初始化一次，之后自动处理所有动态添加的日志行
+let logClickHandlerBound = false;
 function bindLogClickEvents() {
     const container = document.getElementById('logsContainer');
-    if (!container) return;
+    if (!container) {
+        console.warn('logsContainer 未找到，延迟绑定');
+        return;
+    }
     
     // 如果已经绑定过，就不再重复绑定
-    if (container._logClickHandlerBound) {
+    if (logClickHandlerBound && container._logClickHandler) {
         return;
+    }
+    
+    // 移除旧的监听器（如果有）
+    if (container._logClickHandler) {
+        container.removeEventListener('click', container._logClickHandler);
     }
     
     // 创建委托监听器
@@ -340,14 +352,17 @@ function bindLogClickEvents() {
             if (logId) {
                 event.stopPropagation();
                 event.preventDefault();
+                console.log('点击日志行，ID:', logId);
                 showLogDetail(parseInt(logId));
+            } else {
+                console.warn('日志行没有 data-log-id 属性');
             }
         }
     };
     
     // 绑定到容器上（事件委托）
-    container.addEventListener('click', container._logClickHandler);
-    container._logClickHandlerBound = true;
+    container.addEventListener('click', container._logClickHandler, true); // 使用捕获阶段确保事件能触发
+    logClickHandlerBound = true;
     console.log('日志点击事件已绑定（事件委托模式）');
 }
 
