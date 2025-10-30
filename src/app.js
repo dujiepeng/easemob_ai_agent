@@ -65,6 +65,31 @@ app.use((req, res, next) => {
     
     // 记录到数据库
     if (req.path === '/easemob/callback') {
+      // 提取消息相关信息
+      const payload = req.body.payload || {};
+      const msgPayload = payload.payload || {};
+      
+      // 提取 from, to, chatType
+      const from_user = payload.from || null;
+      const to_user = payload.to || null;
+      const chatType = payload.chatType || null;
+      
+      // 提取 body (消息内容)
+      let body = null;
+      if (msgPayload.msg) {
+        // 文本消息
+        body = msgPayload.msg;
+      } else if (msgPayload.url) {
+        // 图片/视频等媒体消息
+        body = msgPayload.url;
+      } else if (msgPayload) {
+        // 其他类型消息，转换为 JSON 字符串
+        body = typeof msgPayload === 'string' ? msgPayload : JSON.stringify(msgPayload);
+      }
+      
+      // 提取 ext (扩展字段)
+      const ext = payload.ext ? (typeof payload.ext === 'string' ? payload.ext : JSON.stringify(payload.ext)) : null;
+      
       logStorage.logRequest({
         callId: req.body.callId || 'unknown',
         timestamp: req.body.timestamp || Date.now(),
@@ -75,7 +100,12 @@ app.use((req, res, next) => {
         requestBody: req.body,
         responseBody: data,
         statusCode: res.statusCode,
-        processingTime: processingTime
+        processingTime: processingTime,
+        from_user: from_user,
+        to_user: to_user,
+        chatType: chatType,
+        body: body,
+        ext: ext
       }).then(() => {
         // 通过 WebSocket 推送实时日志
         io.emit('newLog', {
@@ -87,7 +117,12 @@ app.use((req, res, next) => {
           statusCode: res.statusCode,
           processingTime: processingTime,
           requestBody: req.body,
-          responseBody: data
+          responseBody: data,
+          from_user: from_user,
+          to_user: to_user,
+          chatType: chatType,
+          body: body,
+          ext: ext
         });
       }).catch(err => {
         logger.error('Failed to log request:', err);
