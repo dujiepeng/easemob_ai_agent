@@ -3,8 +3,7 @@ let socket;
 let logs = [];
 let currentOffset = 0;
 let isLoading = false;
-let autoRefreshInterval = null;
-let autoRefreshEnabled = false;
+// 自动刷新相关变量已移除 - 使用 WebSocket 实时推送代替
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -381,25 +380,7 @@ function filterLogs() {
     displayLogs();
 }
 
-// 切换自动刷新
-function toggleAutoRefresh() {
-    const icon = document.getElementById('autoRefreshIcon');
-    const text = document.getElementById('autoRefreshText');
-    
-    if (autoRefreshEnabled) {
-        clearInterval(autoRefreshInterval);
-        icon.className = 'bi bi-play-circle';
-        text.textContent = '自动刷新';
-        autoRefreshEnabled = false;
-    } else {
-        autoRefreshInterval = setInterval(() => {
-            loadStats();
-        }, 5000);
-        icon.className = 'bi bi-pause-circle';
-        text.textContent = '停止刷新';
-        autoRefreshEnabled = true;
-    }
-}
+// 自动刷新功能已移除 - WebSocket 已实现实时推送，无需轮询刷新
 
 // 更新统计数据
 async function updateStats() {
