@@ -169,15 +169,8 @@ function displayLogs() {
     
     container.innerHTML = tableHTML;
     
-    // 添加点击事件监听器
-    container.querySelectorAll('.log-entry').forEach(row => {
-        row.addEventListener('click', function() {
-            const logId = this.getAttribute('data-log-id');
-            if (logId) {
-                showLogDetail(parseInt(logId));
-            }
-        });
-    });
+    // 绑定点击事件
+    bindLogClickEvents();
 }
 
 // 获取过滤后的日志
@@ -319,6 +312,25 @@ async function showLogDetail(logId) {
     } catch (error) {
         console.error('加载日志详情失败:', error);
         showAlert('加载日志详情失败: ' + error.message, 'danger');
+    }
+}
+
+// 绑定日志行点击事件
+function bindLogClickEvents() {
+    const container = document.getElementById('logsContainer');
+    container.querySelectorAll('.log-entry').forEach(row => {
+        // 移除已存在的事件监听器（避免重复绑定）
+        row.removeEventListener('click', handleLogClick);
+        // 添加新的点击事件监听器
+        row.addEventListener('click', handleLogClick);
+    });
+}
+
+// 处理日志行点击事件
+function handleLogClick(event) {
+    const logId = this.getAttribute('data-log-id');
+    if (logId) {
+        showLogDetail(parseInt(logId));
     }
 }
 
