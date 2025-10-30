@@ -75,20 +75,11 @@ app.use((req, res, next) => {
       const chatType = payload.chatType || null;
       const msg_id = payload.msgId || null;
       
-      // 提取 body (消息内容) - 从 payload.bodies[0].msg 提取
+      // 提取 body (消息内容) - 从 payload.bodies 提取整个数组
       let body = null;
-      if (msgPayload.bodies && Array.isArray(msgPayload.bodies) && msgPayload.bodies.length > 0) {
-        const firstBody = msgPayload.bodies[0];
-        if (firstBody.msg) {
-          // 文本消息
-          body = firstBody.msg;
-        } else if (firstBody.url) {
-          // 图片/视频等媒体消息
-          body = firstBody.url;
-        } else if (firstBody) {
-          // 其他类型消息，转换为 JSON 字符串
-          body = typeof firstBody === 'string' ? firstBody : JSON.stringify(firstBody);
-        }
+      if (msgPayload.bodies && Array.isArray(msgPayload.bodies)) {
+        // 提取整个 bodies 数组
+        body = JSON.stringify(msgPayload.bodies);
       } else if (msgPayload.msg) {
         // 兼容旧格式
         body = msgPayload.msg;
